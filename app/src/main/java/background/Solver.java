@@ -11,43 +11,58 @@ import java.util.*;
 public class Solver {
 
     private Map<String, Cache> map;
-    private static Set<Character> separatorSet;
+    private static Set<Character> symbolSet;
     private static Set<Character> punctuationSet;
+    private static Set<Character> splitterSet;
+    private Cache cache = new Cache();
 
     public Solver() {
-        if (separatorSet == null) {
-            separatorSet = new HashSet<>();
-            // TODO: revise the separator set
-            for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '<', '>', '/', '?', '!', '@', '#', '$',
-                    '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', ']', '{', '}', '|', '\\', '\'', '\"', '~',
-                    '`' })
-                separatorSet.add(c);
-        }
-        if (punctuationSet == null) {
-            punctuationSet = new HashSet<>();
-            for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '?', '!', '`', '\'', '\"', '(', ')', '[', ']',
+        /*
+         * if (symbolSet == null) {
+         * symbolSet = new HashSet<>();
+         * // TODO: revise the separator set
+         * for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '<', '>', '/', '?',
+         * '!', '@', '#', '$',
+         * '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', ']', '{', '}', '|',
+         * '\\', '\'', '\"', '~',
+         * '`' })
+         * symbolSet.add(c);
+         * }
+         */
+        if (splitterSet == null) {
+            splitterSet = new HashSet<>();
+            for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '?', '!', '`', '\"', '(', ')', '[', ']',
                     '{', '}' })
                 punctuationSet.add(c);
         }
     }
 
-    private boolean match(char character, char[] charSet) {
-        for (char c : charSet)
-            if (character == c)
-                return true;
-        return false;
+    private boolean isSplitter(char c) {
+        return splitterSet.contains(c);
     }
 
     private boolean isAlpha(char c) {
         return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
     }
 
-    private boolean isPunctuation(char c) {
-        return punctuationSet.contains(c);
-    }
-
     private boolean isDigit(char c) {
         return c <= '9' && c >= '0';
+    }
+
+    private void processWord(LinkedList<Character> string) {
+        Character c;
+        // Trim out beginning and ending symbols, including apostrophes
+        while ((c = string.peekFirst()) != null && !isAlpha(c) && !isDigit(c))
+            string.pollFirst();
+        while ((c = string.peekLast()) != null && !isAlpha(c) && !isDigit(c))
+            string.pollLast();
+
+        Character end = string.pollLast();
+        if(string.peekLast() == '\'' && end == 's')
+            string.pollLast();
+        else if(end != null)
+            //TODO:
+
     }
 
     public boolean processFile(String filename) throws IOException {
@@ -58,40 +73,31 @@ public class Solver {
             System.err.println("File not found: " + filename);
             return false;
         }
-        StringBuilder sb = new StringBuilder();
-        char c = (char) fr.read();
-        char nxt;
+        LinkedList<Character> buffer = new LinkedList<>();
+        char c;
 
-        while ((nxt = (char) fr.read()) != -1) {
+        while ((c = (char) fr.read()) != -1) {
 
             /*
-             * [] don’t, isn’t, ... → one word
-             * [] he’s, I’m, you’re, ... → one word
+             * [] 123, ... → include ALL numbers
+             * [] in the contraction set → one word
              * [] Shawn’s, apple’s, ... → remove ’s from words
-             * [] Jonas’, ’twas , ... → remove beginning or ending apostrophes
-             * [] ice-cream → one word (if chopped by line, change to two words)
-             * [] 123, ... → either include ALL numbers or ignore ALL numbers
-             * [] -, *, ... → ignore standalone symbols (or if a word begins/ends with it)
+             * [v] Jonas’, ’twas , ... → remove beginning or ending apostrophes
+             * [] keep symbols in the middle of the word.
+             * [v] if a word is chopped by line by a symbol, change to two words
+             * [v] -, *, ... → ignore standalone symbols (or if a word begins/ends with it)
+             * TODO: Question: can I treat all symbols as splitters?
              */
-            if (isAlpha(c) || isDigit(c)) {
-                sb.append(c);
-            } else {
-                if (c == '\'') {
-                    if (isAlpha(nxt) && sb.length() != 0)
-                        sb.append(c);
-
-                } else if (c == '-') {
-                    // TODO:
-                } else if (isPunctuation(c)) {
-                } else {
-                    if (sb.length() != 0 && !isPunctuation(nxt)) {
-                        sb.append(c);
-                    }
+            if (isSplitter(c)) {
+                if (buffer.size() != 0) {
+                    processWord(buffer);
+                    buffer = new LinkedList<>();
                 }
-            }
-
-            c = nxt;
+            } else
+                buffer.addLast(c);
         }
+        if (buffer.size() != 0)
+            processWord(buffer);
 
         fr.close();
         return true;
