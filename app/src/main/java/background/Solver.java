@@ -15,7 +15,7 @@ public class Solver {
     private static Set<Character> punctuationSet;
     private static Set<Character> splitterSet;
     private static Set<String> contractionSet;
-    private Cache cache = new Cache();
+    private Cache cache;
 
     public Solver() throws IOException {
         /*
@@ -34,16 +34,17 @@ public class Solver {
             splitterSet = new HashSet<>();
             for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '?', '!', '`', '\"', '(', ')', '[', ']',
                     '{', '}' })
-                punctuationSet.add(c);
+                splitterSet.add(c);
         }
 
         contractionSet = new HashSet<>();
-        BufferedReader fin = new BufferedReader(new FileReader("build/main/resources/contractions.txt"));
+        BufferedReader fin = new BufferedReader(new FileReader("build/resources/main/contractions.txt"));
         String line;
 
         while ((line = fin.readLine()) != null) {
             contractionSet.add(line.substring(0, line.indexOf(',')));
         }
+        fin.close();
 
     }
 
@@ -78,21 +79,30 @@ public class Solver {
             return;
         }
 
-        // TODO: remove 's from words.
         Character end = string.pollLast();
-        if (string.peekLast() == '\'' && end == 's')
+        if (string.peekLast() != null && string.peekLast() == '\'' && end == 's')
             string.pollLast();
+        else
+            string.addLast(end);
+
+        sb = new StringBuilder(string.size());
+
+        for (Character ch : string)
+            sb.append(ch);
+        cache.update(sb.toString());
 
     }
 
-    public boolean processFile(String filename) throws IOException {
+    public Cache processFile(String filename) throws IOException {
         FileReader fr;
         try {
             fr = new FileReader(filename);
         } catch (FileNotFoundException e) {
             System.err.println("File not found: " + filename);
-            return false;
+            return null;
         }
+        cache = new Cache();
+        cache.startTimer();
         LinkedList<Character> buffer = new LinkedList<>();
         char c;
 
@@ -100,10 +110,10 @@ public class Solver {
 
             /*
              * [v] 123, ... → include ALL numbers
-             * [] in the contraction set → one word
-             * [] Shawn’s, apple’s, ... → remove ’s from words
+             * [v] in the contraction set → one word
+             * [v] Shawn’s, apple’s, ... → remove ’s from words
              * [v] Jonas’, ’twas , ... → remove beginning or ending apostrophes
-             * [] keep symbols in the middle of the word.
+             * [v] keep symbols in the middle of the word.
              * [v] if a word is chopped by line by a symbol, change to two words
              * [v] -, *, ... → ignore standalone symbols (or if a word begins/ends with it)
              * TODO: Question: can I treat all symbols as splitters?
@@ -115,11 +125,13 @@ public class Solver {
                 }
             } else
                 buffer.addLast(c);
+            System.out.println(c);
         }
         if (buffer.size() != 0)
             processWord(buffer);
 
         fr.close();
-        return true;
+        cache.stopTimer();
+        return cache;
     }
 }
