@@ -14,9 +14,10 @@ public class Solver {
     private static Set<Character> symbolSet;
     private static Set<Character> punctuationSet;
     private static Set<Character> splitterSet;
+    private static Set<String> contractionSet;
     private Cache cache = new Cache();
 
-    public Solver() {
+    public Solver() throws IOException {
         /*
          * if (symbolSet == null) {
          * symbolSet = new HashSet<>();
@@ -35,6 +36,15 @@ public class Solver {
                     '{', '}' })
                 punctuationSet.add(c);
         }
+
+        contractionSet = new HashSet<>();
+        BufferedReader fin = new BufferedReader(new FileReader("build/main/resources/contractions.txt"));
+        String line;
+
+        while ((line = fin.readLine()) != null) {
+            contractionSet.add(line.substring(0, line.indexOf(',')));
+        }
+
     }
 
     private boolean isSplitter(char c) {
@@ -57,11 +67,21 @@ public class Solver {
         while ((c = string.peekLast()) != null && !isAlpha(c) && !isDigit(c))
             string.pollLast();
 
+        if (string.size() == 0)
+            return;
+
+        StringBuilder sb = new StringBuilder(string.size());
+        for (Character ch : string)
+            sb.append(ch);
+        if (contractionSet.contains(sb.toString())) {
+            cache.update(sb.toString());
+            return;
+        }
+
+        // TODO: remove 's from words.
         Character end = string.pollLast();
-        if(string.peekLast() == '\'' && end == 's')
+        if (string.peekLast() == '\'' && end == 's')
             string.pollLast();
-        else if(end != null)
-            //TODO:
 
     }
 
@@ -79,7 +99,7 @@ public class Solver {
         while ((c = (char) fr.read()) != -1) {
 
             /*
-             * [] 123, ... → include ALL numbers
+             * [v] 123, ... → include ALL numbers
              * [] in the contraction set → one word
              * [] Shawn’s, apple’s, ... → remove ’s from words
              * [v] Jonas’, ’twas , ... → remove beginning or ending apostrophes
