@@ -11,8 +11,7 @@ public class Cache {
 
     private long exeTime;
     private boolean timing;
-    private Map<String, Word> map;
-    // private Queue<Word> frequencyRanked;
+    private Map<String, Integer> map;
     private TreeSet<Word> frequencyRanked;
 
     public Cache() {
@@ -23,25 +22,32 @@ public class Cache {
     }
 
     protected void update(String key) {
-        Word word = (Word) (map.get(key));
-        if (word == null) {
-            word = new Word(key, 0);
-            map.put(key, word);
-
+        if (map.containsKey(key)) {
+            map.put(key, map.get(key) + 1);
+        } else {
+            map.put(key, 1);
         }
-
-        word.incFreq();
-        frequencyRanked.add(word);
-        if (frequencyRanked.size() > 20)
-            frequencyRanked.removeLast();
     }
 
-    public Word get(String key) {
-        return map.get(key);
+    protected void rank() {
+        frequencyRanked = new TreeSet<>();
+        Set<String> set = map.keySet();
+        for (String key : set) {
+            frequencyRanked.add(new Word(key, map.get(key)));
+            if (frequencyRanked.size() > 20) {
+                frequencyRanked.removeLast();
+                System.out.println("remove");
+            }
+            System.out.println(frequencyRanked.size());
+        }
     }
 
-    public Queue<Word> getRankedWords() {
-        return new PriorityQueue<>(frequencyRanked);
+    public Word[] getRankedWords() {
+        Word[] ans = new Word[frequencyRanked.size()];
+        int i = 0;
+        for (Word word : frequencyRanked)
+            ans[i++] = word;
+        return ans;
     }
 
     protected void startTimer() {

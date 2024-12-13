@@ -3,7 +3,7 @@ package background;
 /**
  * Word
  */
-class Word implements Comparable<Word> {
+public class Word implements Comparable<Word> {
     protected String name;
     protected int frequency;
 
@@ -12,21 +12,19 @@ class Word implements Comparable<Word> {
         this.frequency = frequency;
     }
 
-    public void incFreq() {
-        frequency++;
-    }
-
     public String toString() {
         return name + ": " + frequency;
     }
 
     @Override
     public int compareTo(Word nxt) {
-        return nxt.frequency - frequency;
+        if (nxt.frequency != frequency)
+            return nxt.frequency - frequency;
+        return name.compareToIgnoreCase(nxt.name);
     }
 
     @Override
     public boolean equals(Object nxt) {
-        return nxt instanceof Word && ((Word) nxt).name.equals(name);
+        return (nxt instanceof Word) && ((Word) nxt).name.equalsIgnoreCase(name) && ((Word) nxt).frequency == frequency;
     }
 }

@@ -7,29 +7,23 @@ import java.util.*;
  * Solver
  *
  * Solves the frequency and frequency ranking problem for a specific text file.
+ *
+ * Word extraction follows following rules:
+ * > 123, ... → include ALL numbers
+ * > in the contraction set → one word
+ * > Shawn’s, apple’s, ... → remove ’s from words
+ * > Jonas’, ’twas , ... → remove beginning or ending apostrophes
+ * > keep symbols in the middle of the word.
+ * > if a word is chopped by line by a symbol, change to two words
+ * > -, *, ... → ignore standalone symbols (or if a word begins/ends with it)
  */
 public class Solver {
 
-    private Map<String, Cache> map;
-    private static Set<Character> symbolSet;
-    private static Set<Character> punctuationSet;
     private static Set<Character> splitterSet;
     private static Set<String> contractionSet;
     private Cache cache;
 
     public Solver() throws IOException {
-        /*
-         * if (symbolSet == null) {
-         * symbolSet = new HashSet<>();
-         * // TODO: revise the separator set
-         * for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '<', '>', '/', '?',
-         * '!', '@', '#', '$',
-         * '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '[', ']', '{', '}', '|',
-         * '\\', '\'', '\"', '~',
-         * '`' })
-         * symbolSet.add(c);
-         * }
-         */
         if (splitterSet == null) {
             splitterSet = new HashSet<>();
             for (char c : new char[] { ' ', '\n', ',', '.', ':', ';', '?', '!', '`', '\"', '(', ')', '[', ']',
@@ -74,6 +68,7 @@ public class Solver {
         StringBuilder sb = new StringBuilder(string.size());
         for (Character ch : string)
             sb.append(ch);
+        // TODO: Ignore case
         if (contractionSet.contains(sb.toString())) {
             cache.update(sb.toString());
             return;
@@ -94,9 +89,9 @@ public class Solver {
     }
 
     public Cache processFile(String filename) throws IOException {
-        FileReader fr;
+        FileReader fin;
         try {
-            fr = new FileReader(filename);
+            fin = new FileReader(filename);
         } catch (FileNotFoundException e) {
             System.err.println("File not found: " + filename);
             return null;
@@ -104,33 +99,25 @@ public class Solver {
         cache = new Cache();
         cache.startTimer();
         LinkedList<Character> buffer = new LinkedList<>();
-        char c;
+        int c;
 
-        while ((c = (char) fr.read()) != -1) {
-
-            /*
-             * [v] 123, ... → include ALL numbers
-             * [v] in the contraction set → one word
-             * [v] Shawn’s, apple’s, ... → remove ’s from words
-             * [v] Jonas’, ’twas , ... → remove beginning or ending apostrophes
-             * [v] keep symbols in the middle of the word.
-             * [v] if a word is chopped by line by a symbol, change to two words
-             * [v] -, *, ... → ignore standalone symbols (or if a word begins/ends with it)
-             * TODO: Question: can I treat all symbols as splitters?
-             */
-            if (isSplitter(c)) {
+        while ((c = fin.read()) != -1) {
+            if (isSplitter((char) c)) {
                 if (buffer.size() != 0) {
                     processWord(buffer);
                     buffer = new LinkedList<>();
                 }
-            } else
-                buffer.addLast(c);
-            System.out.println(c);
+            } else {
+                if ('A' <= c && c <= 'Z')
+                    c += 32;
+                buffer.addLast((char) c);
+            }
         }
         if (buffer.size() != 0)
             processWord(buffer);
 
-        fr.close();
+        fin.close();
+        cache.rank();
         cache.stopTimer();
         return cache;
     }
