@@ -46,39 +46,38 @@ public class Solver {
         return splitterSet.contains(c);
     }
 
-    private boolean isAlpha(char c) {
-        return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
-    }
-
-    private boolean isDigit(char c) {
-        return c <= '9' && c >= '0';
+    private boolean isValidChar(char c) {
+        return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z') || ('0' <= c && c <= '9');
     }
 
     private String trimSymbols(String string) {
         int i = 0;
         int j = string.length() - 1;
         // Trim out beginning and ending symbols, including apostrophes
-        while (i < string.length() && !isAlpha(string.charAt(i)) && !isDigit(string.charAt(i)))
+        while (i < string.length() && !isValidChar(string.charAt(i)))
             i++;
-        while (j >= i && !isAlpha(string.charAt(j)) && !isDigit(string.charAt(j)))
+        while (j >= i && !isValidChar(string.charAt(j)))
             j--;
 
         return string.substring(i, j + 1);
     }
 
-    private void processWord(LinkedList<Character> string) {
-        if (string.size() == 0)
+    StringBuilder sb = new StringBuilder();
+    ArrayList<String> parts = new ArrayList<>();
+
+    private void processWord(StringBuilder string) {
+        if (string.length() == 0)
             return;
 
         // Split the string with '
-        StringBuilder sb = new StringBuilder();
-        LinkedList<String> parts = new LinkedList<>();
-        for (Character c : string) {
-            if (c == '\'') {
+        sb.delete(0, sb.length());
+        parts.clear();
+        for (int i = 0; i < string.length(); i++) {
+            if (string.charAt(i) == '\'') {
                 parts.add(sb.toString());
-                sb = new StringBuilder();
+                sb.delete(0, sb.length());
             } else
-                sb.append(c);
+                sb.append(string.charAt(i));
         }
         if (sb.length() != 0)
             parts.add(sb.toString());
@@ -93,7 +92,8 @@ public class Solver {
                 if (contractionSet.contains(temp)) {
                     cache.update(temp);
                     i++;
-                } else if (temp.endsWith("\'s")) {
+                } else if (temp.length() > 1 && temp.charAt(temp.length() - 2) == '\''
+                        && temp.charAt(temp.length() - 1) == 's') {
                     if (temp.length() > 2)
                         cache.update(temp.substring(0, temp.length() - 2));
                     i++;
@@ -104,6 +104,7 @@ public class Solver {
                 }
             }
         }
+
     }
 
     public Cache processFile(String filename) throws IOException {
@@ -116,27 +117,29 @@ public class Solver {
         }
         cache = new Cache();
         cache.startTimer();
-        LinkedList<Character> buffer = new LinkedList<>();
+        StringBuilder buffer = new StringBuilder();
         int c;
 
         while ((c = fin.read()) != -1) {
             if (isSplitter((char) c)) {
-                if (buffer.size() != 0) {
+                if (buffer.length() != 0) {
                     processWord(buffer);
-                    buffer = new LinkedList<>();
+                    // buffer.clear();
+                    buffer.delete(0, buffer.length());
                 }
             } else {
                 if ('A' <= c && c <= 'Z')
                     c += 32;
-                buffer.addLast((char) c);
+                buffer.append((char) c);
             }
         }
-        if (buffer.size() != 0)
+        if (buffer.length() != 0)
             processWord(buffer);
 
         fin.close();
         cache.rank();
         cache.stopTimer();
+
         return cache;
     }
 }

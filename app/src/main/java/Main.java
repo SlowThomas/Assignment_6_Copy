@@ -11,7 +11,7 @@ public class Main {
         for (Word word : words) {
             System.out.println(word);
         }
-        System.out.println(cache.getTime());
+        System.out.println("Execution time: " + cache.getTime());
     }
 
     public static void test2() {

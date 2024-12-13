@@ -11,28 +11,28 @@ public class Cache {
 
     private long exeTime;
     private boolean timing;
-    private Map<String, Integer> map;
+    private Map<String, Integer> frequencyMap;
     private TreeSet<Word> frequencyRanked;
 
     public Cache() {
         exeTime = -1l;
         timing = false;
-        map = new HashMap<>();
+        frequencyMap = new HashMap<>();
         frequencyRanked = new TreeSet<>();
     }
 
     protected void update(String key) {
-        if (map.containsKey(key)) {
-            map.put(key, map.get(key) + 1);
+        if (frequencyMap.containsKey(key)) {
+            frequencyMap.put(key, frequencyMap.get(key) + 1);
         } else {
-            map.put(key, 1);
+            frequencyMap.put(key, 1);
         }
     }
 
     protected void rank() {
         frequencyRanked = new TreeSet<>();
-        for (String key : map.keySet()) {
-            frequencyRanked.add(new Word(key, map.get(key)));
+        for (String key : frequencyMap.keySet()) {
+            frequencyRanked.add(new Word(key, frequencyMap.get(key)));
             if (frequencyRanked.size() > 20)
                 frequencyRanked.removeLast();
         }
