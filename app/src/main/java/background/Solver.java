@@ -36,7 +36,7 @@ public class Solver {
         String line;
 
         while ((line = fin.readLine()) != null) {
-            contractionSet.add(line.substring(0, line.indexOf(',')));
+            contractionSet.add(line.substring(0, line.indexOf(',')).toLowerCase());
         }
         fin.close();
 
