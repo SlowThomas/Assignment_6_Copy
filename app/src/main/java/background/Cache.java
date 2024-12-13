@@ -31,14 +31,10 @@ public class Cache {
 
     protected void rank() {
         frequencyRanked = new TreeSet<>();
-        Set<String> set = map.keySet();
-        for (String key : set) {
+        for (String key : map.keySet()) {
             frequencyRanked.add(new Word(key, map.get(key)));
-            if (frequencyRanked.size() > 20) {
+            if (frequencyRanked.size() > 20)
                 frequencyRanked.removeLast();
-                System.out.println("remove");
-            }
-            System.out.println(frequencyRanked.size());
         }
     }
 

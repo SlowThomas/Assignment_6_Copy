@@ -68,7 +68,6 @@ public class Solver {
         StringBuilder sb = new StringBuilder(string.size());
         for (Character ch : string)
             sb.append(ch);
-        // TODO: Ignore case
         if (contractionSet.contains(sb.toString())) {
             cache.update(sb.toString());
             return;
