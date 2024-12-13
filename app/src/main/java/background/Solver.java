@@ -54,37 +54,56 @@ public class Solver {
         return c <= '9' && c >= '0';
     }
 
-    private void processWord(LinkedList<Character> string) {
-        Character c;
+    private String trimSymbols(String string) {
+        int i = 0;
+        int j = string.length() - 1;
         // Trim out beginning and ending symbols, including apostrophes
-        while ((c = string.peekFirst()) != null && !isAlpha(c) && !isDigit(c))
-            string.pollFirst();
-        while ((c = string.peekLast()) != null && !isAlpha(c) && !isDigit(c))
-            string.pollLast();
+        while (i < string.length() && !isAlpha(string.charAt(i)) && !isDigit(string.charAt(i)))
+            i++;
+        while (j >= i && !isAlpha(string.charAt(j)) && !isDigit(string.charAt(j)))
+            j--;
 
+        return string.substring(i, j + 1);
+    }
+
+    private void processWord(LinkedList<Character> string) {
         if (string.size() == 0)
             return;
 
-        StringBuilder sb = new StringBuilder(string.size());
-        for (Character ch : string)
-            sb.append(ch);
-        if (contractionSet.contains(sb.toString())) {
-            cache.update(sb.toString());
-            return;
+        // Split the string with '
+        StringBuilder sb = new StringBuilder();
+        LinkedList<String> parts = new LinkedList<>();
+        for (Character c : string) {
+            if (c == '\'') {
+                parts.add(sb.toString());
+                sb = new StringBuilder();
+            } else
+                sb.append(c);
         }
+        if (sb.length() != 0)
+            parts.add(sb.toString());
 
-        Character end = string.pollLast();
-        if (string.peekLast() != null && string.peekLast() == '\'' && end == 's')
-            string.pollLast();
-        else
-            string.addLast(end);
-
-        sb = new StringBuilder(string.size());
-
-        for (Character ch : string)
-            sb.append(ch);
-        cache.update(sb.toString());
-
+        for (int i = 0; i < parts.size(); i++) {
+            if (i == parts.size() - 1) {
+                String temp = trimSymbols(parts.get(i));
+                if (temp.length() > 0)
+                    cache.update(temp);
+            } else {
+                String temp = trimSymbols(parts.get(i) + '\'' + parts.get(i + 1));
+                if (contractionSet.contains(temp)) {
+                    cache.update(temp);
+                    i++;
+                } else if (temp.endsWith("\'s")) {
+                    if (temp.length() > 2)
+                        cache.update(temp.substring(0, temp.length() - 2));
+                    i++;
+                } else {
+                    temp = trimSymbols(parts.get(i));
+                    if (temp.length() > 0)
+                        cache.update(temp);
+                }
+            }
+        }
     }
 
     public Cache processFile(String filename) throws IOException {
