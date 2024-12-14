@@ -108,6 +108,7 @@ public class Solver {
     }
 
     public Cache processFile(String filename) throws IOException {
+        cache = new Cache();
         cache.startTimer();
         FileReader fin;
         try {
@@ -116,7 +117,6 @@ public class Solver {
             System.err.println("File not found: " + filename);
             return null;
         }
-        cache = new Cache();
         StringBuilder buffer = new StringBuilder();
         int c;
 
