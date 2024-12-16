@@ -1,36 +1,18 @@
-import background.*;
 
+/* Name: Thomas Xu
+ * Date: 2024.12.18
+ * Description: A program that finds the frequency (number of occurrences) of all the words in a text file.
+ */
+import ui.*;
+
+/**
+ * Main
+ *
+ * The main process of the program.
+ */
 public class Main {
-
-    /**
-     * Pasrses the file as in the complete program. Outputs execution time to
-     * stdout.
-     *
-     * @param filename filename of the text file, located in the resources folder
-     * @throws Exception this is just a test so catch whatever exception it makes
-     */
-    public static void solverTest(String filename) throws Exception {
-        System.out.println(filename);
-        Solver solver = new Solver();
-        Cache cache = solver.processFile("build/resources/main/" + filename);
-
-        /*
-         * Word[] words = cache.getRankedWords();
-         *
-         * for (Word word : words) {
-         * System.out.println(word);
-         * }
-         */
-        System.out.println("Execution time: " + cache.getTime() + "ms");
-    }
-
-    public static void main(String[] args) throws Exception {
-        // For testing with command line arguments.
-        for (String filename : args)
-            solverTest(filename);
-
-        // Explicit testing
-        solverTest("MOBY.TXT");
-        solverTest("ALICE.TXT");
+    public static void main(String[] args) throws java.io.IOException {
+        // Load the user interface.
+        new UI();
     }
 }
